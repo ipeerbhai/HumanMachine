@@ -1,0 +1,85 @@
+[gd_scene load_steps=2 format=3 uid="uid://eo2ahtpcixsa"]
+
+[ext_resource type="Script" path="res://main.gd" id="1_1yke3"]
+
+[node name="ctrlSceneRoot" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_1yke3")
+
+[node name="vbxSingleColLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="lblMainText" type="Label" parent="vbxSingleColLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Tic Tac Toe"
+
+[node name="grdMainContainer" type="GridContainer" parent="vbxSingleColLayout"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+columns = 3
+
+[node name="btnTopLeft" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnTopMiddle" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnTopRight" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnMiddleLeft" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnMiddleMiddle" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnMiddleRight" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnBottomLeft" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnBottomMiddle" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnBottomRight" type="Button" parent="vbxSingleColLayout/grdMainContainer"]
+custom_minimum_size = Vector2(133, 133)
+layout_mode = 2
+
+[node name="btnReset" type="Button" parent="vbxSingleColLayout"]
+layout_mode = 2
+text = "Reset"
+
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnTopLeft" to="." method="_on_move_made" binds= ["btnTopLeft"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnTopMiddle" to="." method="_on_move_made" binds= ["btnTopMiddle"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnTopRight" to="." method="_on_move_made" binds= ["btnTopRight"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnMiddleLeft" to="." method="_on_move_made" binds= ["btnMiddleLeft"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnMiddleMiddle" to="." method="_on_move_made" binds= ["btnMiddleMiddle"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnMiddleRight" to="." method="_on_move_made" binds= ["btnMiddleRight"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnBottomLeft" to="." method="_on_move_made" binds= ["btnBottomLeft"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnBottomMiddle" to="." method="_on_move_made" binds= ["btnBottomMiddle"]]
+[connection signal="pressed" from="vbxSingleColLayout/grdMainContainer/btnBottomRight" to="." method="_on_move_made" binds= ["btnBottomRight"]]
+[connection signal="pressed" from="vbxSingleColLayout/btnReset" to="." method="_on_btn_reset_pressed"]
