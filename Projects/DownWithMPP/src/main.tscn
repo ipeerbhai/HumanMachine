@@ -83,6 +83,10 @@ text = "Eraser Mode"
 layout_mode = 2
 text = "Clear Log"
 
+[node name="SaveLogButton" type="Button" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
+text = "Save Log"
+
 [node name="EventLog" type="CodeEdit" parent="RightPanel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -97,3 +101,4 @@ gutters_draw_line_numbers = true
 [connection signal="value_changed" from="RightPanel/VBoxContainer/ControlsContainer/TiltSlider" to="LeftPanel/DrawingArea" method="_on_tilt_sensitivity_changed"]
 [connection signal="toggled" from="RightPanel/VBoxContainer/ControlsContainer/EraserToggle" to="LeftPanel/DrawingArea" method="_on_eraser_toggle_changed"]
 [connection signal="pressed" from="RightPanel/VBoxContainer/ControlsContainer/ClearLogButton" to="LeftPanel/DrawingArea" method="_on_clear_log_button_pressed"]
+[connection signal="pressed" from="RightPanel/VBoxContainer/ControlsContainer/SaveLogButton" to="LeftPanel/DrawingArea" method="_on_save_log_button_pressed"]

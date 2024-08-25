@@ -12,8 +12,22 @@ var pressure_sensitivity = 0.5
 var tilt_sensitivity = 0.5
 var erase_mode = false
 
+var file_dialog: FileDialog
+
 func _ready():
 	print("Script initialized")
+	var event_log = $"../../RightPanel/VBoxContainer/EventLog"
+	event_log.gutters_draw_line_numbers = true
+	event_log.minimap_draw = false
+	event_log.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	
+	# Create FileDialog
+	file_dialog = FileDialog.new()
+	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	file_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	file_dialog.add_filter("*.txt", "Text Files")
+	file_dialog.connect("file_selected", Callable(self, "_on_file_selected"))
+	add_child(file_dialog)
 
 func _gui_input(event):
 	var event_text = "Event: " + str(event)
@@ -120,3 +134,22 @@ func _on_eraser_toggle_changed(button_pressed):
 
 func _on_clear_log_button_pressed():
 	$"../../RightPanel/VBoxContainer/EventLog".text = ""
+
+func _on_save_log_button_pressed():
+	var datetime = Time.get_datetime_dict_from_system()
+	var default_name = "log_%04d%02d%02d_%02d%02d%02d.txt" % [
+		datetime.year, datetime.month, datetime.day,
+		datetime.hour, datetime.minute, datetime.second
+	]
+	file_dialog.current_file = default_name
+	file_dialog.popup_centered(Vector2(800, 600))
+
+func _on_file_selected(path):
+	var event_log = $"../../RightPanel/VBoxContainer/EventLog"
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	if file:
+		file.store_string(event_log.text)
+		file.close()
+		print("Log saved successfully to: ", path)
+	else:
+		print("Error saving log file")
