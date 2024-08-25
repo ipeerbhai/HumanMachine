@@ -12,29 +12,11 @@ var pressure_sensitivity = 0.5
 var tilt_sensitivity = 0.5
 var erase_mode = false
 
-var file_dialog: FileDialog
-
 func _ready():
 	print("Script initialized")
-	var event_log = $"../../RightPanel/VBoxContainer/EventLog"
-	event_log.gutters_draw_line_numbers = true
-	event_log.minimap_draw = false
-	event_log.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	
-	# Create FileDialog
-	file_dialog = FileDialog.new()
-	file_dialog.access = FileDialog.ACCESS_FILESYSTEM
-	file_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
-	file_dialog.add_filter("*.txt", "Text Files")
-	file_dialog.connect("file_selected", Callable(self, "_on_file_selected"))
-	add_child(file_dialog)
 
 func _gui_input(event):
-	var event_text = "Event: " + str(event)
-	var event_log = $"../../RightPanel/VBoxContainer/EventLog"
-	event_log.text += event_text + "\n"
-	event_log.scroll_vertical = event_log.get_line_count()  # Scroll to bottom
-	
+	print("Received input event: ", event)
 	if event is InputEventMouseButton or event is InputEventScreenTouch:
 		if event.pressed:
 			start_interaction(event)
@@ -43,9 +25,12 @@ func _gui_input(event):
 	elif event is InputEventMouseMotion or event is InputEventScreenDrag:
 		continue_interaction(event)
 
+	update_event_log(event)
+
 func start_interaction(event):
+	print("Starting interaction")
 	var local_position = get_local_mouse_position()
-	if erase_mode or (event is InputEventMouseMotion and event.pen_inverted):
+	if (event is InputEventMouseMotion and event.pen_inverted) or (erase_mode and event is InputEventScreenTouch):
 		erasing = true
 		drawing = false
 		erase_at_position(local_position, event)
@@ -55,24 +40,31 @@ func start_interaction(event):
 		start_new_line(local_position, event)
 
 func start_new_line(position, event):
+	print("Starting new line at position: ", position)
 	current_line = Line2D.new()
 	current_line.default_color = Color.BLACK
-	current_line.width = calculate_line_width(event.pressure if "pressure" in event else 1.0)
+	current_line.width = calculate_line_width(get_pressure(event))
 	current_line.add_point(position)
 	add_child(current_line)
 	lines.append(current_line)
 
 func continue_interaction(event):
+	print("Continuing interaction")
 	var local_position = get_local_mouse_position()
-	if erasing:
+	if event is InputEventMouseMotion and event.pen_inverted:
+		erasing = true
+		drawing = false
+	
+	if erasing or erase_mode:
 		erase_at_position(local_position, event)
 	elif drawing and current_line:
-		var width = calculate_line_width(event.pressure if "pressure" in event else 1.0)
+		var width = calculate_line_width(get_pressure(event))
 		current_line.width = width
 		apply_tilt_effect(current_line, event)
 		current_line.add_point(local_position)
 
 func stop_interaction():
+	print("Stopping interaction")
 	drawing = false
 	erasing = false
 	current_line = null
@@ -82,12 +74,14 @@ func calculate_line_width(pressure):
 	return lerp(min_width, max_width, adjusted_pressure)
 
 func apply_tilt_effect(line, event):
-	if "tilt" in event:
-		var tilt = event.tilt * tilt_sensitivity
-		line.default_color = Color(1.0 - tilt.x, 1.0 - tilt.y, 1.0, 1.0)
+	var tilt = get_tilt(event)
+	line.default_color = Color(1.0 - abs(tilt.x) * tilt_sensitivity, 
+							   1.0 - abs(tilt.y) * tilt_sensitivity, 
+							   1.0, 1.0)
 
 func erase_at_position(position, event):
-	var erase_radius = calculate_line_width(event.pressure if "pressure" in event else 1.0)
+	print("Erasing at position: ", position)
+	var erase_radius = calculate_line_width(get_pressure(event))
 	for line in lines:
 		var points_to_remove = []
 		for i in range(line.get_point_count()):
@@ -105,12 +99,35 @@ func erase_at_position(position, event):
 			lines.erase(line)
 			line.queue_free()
 
+func get_pressure(event):
+	if event is InputEventMouseMotion:
+		return event.pressure
+	elif event is InputEventScreenDrag:
+		return event.pressure
+	elif event is InputEventMouseButton:
+		return 1.0 if event.pressed else 0.0
+	elif event is InputEventScreenTouch:
+		return 1.0 if event.pressed else 0.0
+	return 1.0  # Default pressure
+
+func get_tilt(event):
+	if event is InputEventMouseMotion:
+		return event.tilt
+	return Vector2.ZERO  # Default tilt
+
+func update_event_log(event):
+	var log = $"../../RightPanel/VBoxContainer/EventLog"
+	log.text += str(event) + "\n"
+	log.scroll_vertical = log.get_line_count()
+
 func _on_clear_button_pressed():
+	print("Clear button pressed")
 	for line in lines:
 		line.queue_free()
 	lines.clear()
 
 func _on_save_button_pressed():
+	print("Save button pressed")
 	var viewport = get_viewport()
 	var image = viewport.get_texture().get_image()
 	var datetime = Time.get_datetime_dict_from_system()
@@ -124,32 +141,28 @@ func _on_save_button_pressed():
 func _on_pressure_sensitivity_changed(value):
 	pressure_sensitivity = value
 	$"../../RightPanel/VBoxContainer/ControlsContainer/PressureLabel".text = "Pressure: %.1f" % value
+	print("Pressure sensitivity changed to: ", value)
 
 func _on_tilt_sensitivity_changed(value):
 	tilt_sensitivity = value
 	$"../../RightPanel/VBoxContainer/ControlsContainer/TiltLabel".text = "Tilt: %.1f" % value
+	print("Tilt sensitivity changed to: ", value)
 
 func _on_eraser_toggle_changed(button_pressed):
 	erase_mode = button_pressed
+	print("Eraser mode: ", "On" if erase_mode else "Off")
 
 func _on_clear_log_button_pressed():
 	$"../../RightPanel/VBoxContainer/EventLog".text = ""
 
 func _on_save_log_button_pressed():
+	var log_text = $"../../RightPanel/VBoxContainer/EventLog".text
 	var datetime = Time.get_datetime_dict_from_system()
-	var default_name = "log_%04d%02d%02d_%02d%02d%02d.txt" % [
+	var filename = "log_%04d%02d%02d_%02d%02d%02d.txt" % [
 		datetime.year, datetime.month, datetime.day,
 		datetime.hour, datetime.minute, datetime.second
 	]
-	file_dialog.current_file = default_name
-	file_dialog.popup_centered(Vector2(800, 600))
-
-func _on_file_selected(path):
-	var event_log = $"../../RightPanel/VBoxContainer/EventLog"
-	var file = FileAccess.open(path, FileAccess.WRITE)
-	if file:
-		file.store_string(event_log.text)
-		file.close()
-		print("Log saved successfully to: ", path)
-	else:
-		print("Error saving log file")
+	var file = FileAccess.open("user://" + filename, FileAccess.WRITE)
+	file.store_string(log_text)
+	file.close()
+	print("Log saved as: ", filename)
