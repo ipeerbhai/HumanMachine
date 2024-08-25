@@ -14,17 +14,13 @@ var erase_mode = false
 
 func _ready():
 	print("Script initialized")
-	%CanvasLayer/DrawingArea.modulate = Color(1, 0, 0, 0.5)  # Semi-transparent red for visibility check
-	
-	# Debug line
-	var debug_line = Line2D.new()
-	debug_line.add_point(Vector2(100, 100))
-	debug_line.add_point(Vector2(200, 200))
-	debug_line.default_color = Color.RED
-	%CanvasLayer/DrawingArea.add_child(debug_line)
 
 func _gui_input(event):
-	print("Received input event: ", event)
+	var event_text = "Event: " + str(event)
+	var event_log = $"../../RightPanel/VBoxContainer/EventLog"
+	event_log.text += event_text + "\n"
+	event_log.scroll_vertical = event_log.get_line_count()  # Scroll to bottom
+	
 	if event is InputEventMouseButton or event is InputEventScreenTouch:
 		if event.pressed:
 			start_interaction(event)
@@ -34,9 +30,8 @@ func _gui_input(event):
 		continue_interaction(event)
 
 func start_interaction(event):
-	print("Starting interaction")
 	var local_position = get_local_mouse_position()
-	if event is InputEventMouseMotion and event.pen_inverted:
+	if erase_mode or (event is InputEventMouseMotion and event.pen_inverted):
 		erasing = true
 		drawing = false
 		erase_at_position(local_position, event)
@@ -46,21 +41,14 @@ func start_interaction(event):
 		start_new_line(local_position, event)
 
 func start_new_line(position, event):
-	print("Starting new line at position: ", position)
 	current_line = Line2D.new()
 	current_line.default_color = Color.BLACK
 	current_line.width = calculate_line_width(event.pressure if "pressure" in event else 1.0)
 	current_line.add_point(position)
-	%CanvasLayer/DrawingArea.add_child(current_line)
+	add_child(current_line)
 	lines.append(current_line)
 
 func continue_interaction(event):
-	print("Continuing interaction")
-	if event is InputEventMouseMotion:
-		print("Pen pressure: ", event.pressure)
-		if event.pen_inverted:
-			erasing = true
-			drawing = false
 	var local_position = get_local_mouse_position()
 	if erasing:
 		erase_at_position(local_position, event)
@@ -71,7 +59,6 @@ func continue_interaction(event):
 		current_line.add_point(local_position)
 
 func stop_interaction():
-	print("Stopping interaction")
 	drawing = false
 	erasing = false
 	current_line = null
@@ -81,13 +68,11 @@ func calculate_line_width(pressure):
 	return lerp(min_width, max_width, adjusted_pressure)
 
 func apply_tilt_effect(line, event):
-	if event is InputEventMouseMotion:
+	if "tilt" in event:
 		var tilt = event.tilt * tilt_sensitivity
-		# This is a placeholder for actual tilt implementation
-		line.default_color = Color(1.0 - abs(tilt.x), 1.0 - abs(tilt.y), 1.0, 1.0)
+		line.default_color = Color(1.0 - tilt.x, 1.0 - tilt.y, 1.0, 1.0)
 
 func erase_at_position(position, event):
-	print("Erasing at position: ", position)
 	var erase_radius = calculate_line_width(event.pressure if "pressure" in event else 1.0)
 	for line in lines:
 		var points_to_remove = []
@@ -107,13 +92,11 @@ func erase_at_position(position, event):
 			line.queue_free()
 
 func _on_clear_button_pressed():
-	print("Clear button pressed")
 	for line in lines:
 		line.queue_free()
 	lines.clear()
 
 func _on_save_button_pressed():
-	print("Save button pressed")
 	var viewport = get_viewport()
 	var image = viewport.get_texture().get_image()
 	var datetime = Time.get_datetime_dict_from_system()
@@ -126,22 +109,14 @@ func _on_save_button_pressed():
 
 func _on_pressure_sensitivity_changed(value):
 	pressure_sensitivity = value
-	$CanvasLayer/UI/PressureLabel.text = "Pressure: %.1f" % value
-	print("Pressure sensitivity changed to: ", value)
+	$"../../RightPanel/VBoxContainer/ControlsContainer/PressureLabel".text = "Pressure: %.1f" % value
 
 func _on_tilt_sensitivity_changed(value):
 	tilt_sensitivity = value
-	$CanvasLayer/UI/TiltLabel.text = "Tilt: %.1f" % value
-	print("Tilt sensitivity changed to: ", value)
+	$"../../RightPanel/VBoxContainer/ControlsContainer/TiltLabel".text = "Tilt: %.1f" % value
 
 func _on_eraser_toggle_changed(button_pressed):
 	erase_mode = button_pressed
-	print("Eraser mode: ", "On" if erase_mode else "Off")
 
-func _process(delta):
-	queue_redraw()  # Ensure continuous redrawing
-
-func _draw():
-	# This function is called when redrawing is needed
-	# It's not strictly necessary for Line2D nodes, but can be useful for custom drawing
-	pass
+func _on_clear_log_button_pressed():
+	$"../../RightPanel/VBoxContainer/EventLog".text = ""

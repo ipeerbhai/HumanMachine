@@ -10,19 +10,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-unique_name_in_owner = true
-
-[node name="DrawingArea" type="Control" parent="CanvasLayer"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
+[node name="LeftPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 9
 anchor_bottom = 1.0
-grow_horizontal = 2
+offset_right = 960.0
 grow_vertical = 2
 
-[node name="UI" type="Control" parent="CanvasLayer"]
-layout_mode = 3
+[node name="DrawingArea" type="Control" parent="LeftPanel"]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -30,68 +26,74 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_r3j8q")
 
-[node name="ClearButton" type="Button" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 110.0
-offset_bottom = 50.0
+[node name="RightPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -320.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RightPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ControlsContainer" type="VBoxContainer" parent="RightPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="ClearButton" type="Button" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
 text = "Clear"
 
-[node name="SaveButton" type="Button" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 120.0
-offset_top = 10.0
-offset_right = 220.0
-offset_bottom = 50.0
+[node name="SaveButton" type="Button" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
 text = "Save"
 
-[node name="PressureSlider" type="HSlider" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 60.0
-offset_right = 210.0
-offset_bottom = 76.0
+[node name="PressureSlider" type="HSlider" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
 max_value = 1.0
 step = 0.1
 value = 0.5
 
-[node name="PressureLabel" type="Label" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 220.0
-offset_top = 60.0
-offset_right = 320.0
-offset_bottom = 86.0
+[node name="PressureLabel" type="Label" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
 text = "Pressure: 0.5"
 
-[node name="TiltSlider" type="HSlider" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 90.0
-offset_right = 210.0
-offset_bottom = 106.0
+[node name="TiltSlider" type="HSlider" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
 max_value = 1.0
 step = 0.1
 value = 0.5
 
-[node name="TiltLabel" type="Label" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 220.0
-offset_top = 90.0
-offset_right = 320.0
-offset_bottom = 116.0
+[node name="TiltLabel" type="Label" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
 text = "Tilt: 0.5"
 
-[node name="EraserToggle" type="CheckButton" parent="CanvasLayer/UI"]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 120.0
-offset_right = 210.0
-offset_bottom = 151.0
+[node name="EraserToggle" type="CheckButton" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
 text = "Eraser Mode"
 
-[connection signal="pressed" from="CanvasLayer/UI/ClearButton" to="." method="_on_clear_button_pressed"]
-[connection signal="pressed" from="CanvasLayer/UI/SaveButton" to="." method="_on_save_button_pressed"]
-[connection signal="value_changed" from="CanvasLayer/UI/PressureSlider" to="." method="_on_pressure_sensitivity_changed"]
-[connection signal="value_changed" from="CanvasLayer/UI/TiltSlider" to="." method="_on_tilt_sensitivity_changed"]
-[connection signal="toggled" from="CanvasLayer/UI/EraserToggle" to="." method="_on_eraser_toggle_changed"]
+[node name="ClearLogButton" type="Button" parent="RightPanel/VBoxContainer/ControlsContainer"]
+layout_mode = 2
+text = "Clear Log"
+
+[node name="EventLog" type="CodeEdit" parent="RightPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+editable = false
+wrap_mode = 1
+line_folding = true
+gutters_draw_line_numbers = true
+
+[connection signal="pressed" from="RightPanel/VBoxContainer/ControlsContainer/ClearButton" to="LeftPanel/DrawingArea" method="_on_clear_button_pressed"]
+[connection signal="pressed" from="RightPanel/VBoxContainer/ControlsContainer/SaveButton" to="LeftPanel/DrawingArea" method="_on_save_button_pressed"]
+[connection signal="value_changed" from="RightPanel/VBoxContainer/ControlsContainer/PressureSlider" to="LeftPanel/DrawingArea" method="_on_pressure_sensitivity_changed"]
+[connection signal="value_changed" from="RightPanel/VBoxContainer/ControlsContainer/TiltSlider" to="LeftPanel/DrawingArea" method="_on_tilt_sensitivity_changed"]
+[connection signal="toggled" from="RightPanel/VBoxContainer/ControlsContainer/EraserToggle" to="LeftPanel/DrawingArea" method="_on_eraser_toggle_changed"]
+[connection signal="pressed" from="RightPanel/VBoxContainer/ControlsContainer/ClearLogButton" to="LeftPanel/DrawingArea" method="_on_clear_log_button_pressed"]
