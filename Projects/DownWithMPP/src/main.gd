@@ -156,13 +156,24 @@ func _on_clear_log_button_pressed():
 	$"../../RightPanel/VBoxContainer/EventLog".text = ""
 
 func _on_save_log_button_pressed():
-	var log_text = $"../../RightPanel/VBoxContainer/EventLog".text
+	var save_dialog = $"../../SaveFileDialog"
+	save_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	save_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	save_dialog.filters = ["*.txt ; Text Files"]
+	
 	var datetime = Time.get_datetime_dict_from_system()
-	var filename = "log_%04d%02d%02d_%02d%02d%02d.txt" % [
+	var default_filename = "log_%04d%02d%02d_%02d%02d%02d.txt" % [
 		datetime.year, datetime.month, datetime.day,
 		datetime.hour, datetime.minute, datetime.second
 	]
-	var file = FileAccess.open("user://" + filename, FileAccess.WRITE)
+	save_dialog.current_file = default_filename
+	
+	save_dialog.popup_centered()
+	save_dialog.connect("file_selected", Callable(self, "_on_SaveFileDialog_file_selected"))
+
+func _on_SaveFileDialog_file_selected(path):
+	var log_text = $"../../RightPanel/VBoxContainer/EventLog".text
+	var file = FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(log_text)
 	file.close()
-	print("Log saved as: ", filename)
+	print("Log saved as: ", path)
