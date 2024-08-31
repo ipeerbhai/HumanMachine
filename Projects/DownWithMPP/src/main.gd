@@ -4,10 +4,12 @@ var drawing = false
 var erasing = false
 var current_line: Line2D = null
 var lines = []
+
 var min_pressure = 0.1
 var max_pressure = 1.0
 var min_width = 1.0
 var max_width = 10.0
+
 var pressure_sensitivity = 0.5
 var tilt_sensitivity = 0.5
 var erase_mode = false
@@ -15,100 +17,50 @@ var erase_mode = false
 func _ready():
 	print("Script initialized")
 
-func _gui_input(event):
-	print("Received input event: ", event)
-	if event is InputEventMouseButton or event is InputEventScreenTouch:
-		if event.pressed:
-			start_interaction(event)
-		else:
-			stop_interaction()
-	elif event is InputEventMouseMotion or event is InputEventScreenDrag:
-		continue_interaction(event)
-
+func _input(event):
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				start_drawing(event.position)
+			else:
+				stop_drawing()
+	elif event is InputEventMouseMotion:
+		if drawing:
+			continue_drawing(event)
+	
 	update_event_log(event)
 
-func start_interaction(event):
-	print("Starting interaction")
-	var local_position = get_local_mouse_position()
-	if (event is InputEventMouseMotion and event.pen_inverted) or (erase_mode and event is InputEventScreenTouch):
-		erasing = true
-		drawing = false
-		erase_at_position(local_position, event)
-	else:
-		erasing = false
-		drawing = true
-		start_new_line(local_position, event)
-
-func start_new_line(position, event):
-	print("Starting new line at position: ", position)
+func start_drawing(position):
+	drawing = true
 	current_line = Line2D.new()
 	current_line.default_color = Color.BLACK
-	current_line.width = calculate_line_width(get_pressure(event))
-	current_line.add_point(position)
+	current_line.width = calculate_line_width(0.5)  # Start with mid pressure
 	add_child(current_line)
 	lines.append(current_line)
+	add_point_to_line(position, 0.5, Vector2.ZERO)  # Start with mid pressure and no tilt
 
-func continue_interaction(event):
-	print("Continuing interaction")
-	var local_position = get_local_mouse_position()
-	if event is InputEventMouseMotion and event.pen_inverted:
-		erasing = true
-		drawing = false
-	
-	if erasing or erase_mode:
-		erase_at_position(local_position, event)
-	elif drawing and current_line:
-		var width = calculate_line_width(get_pressure(event))
-		current_line.width = width
-		apply_tilt_effect(current_line, event)
-		current_line.add_point(local_position)
-
-func stop_interaction():
-	print("Stopping interaction")
+func stop_drawing():
 	drawing = false
-	erasing = false
 	current_line = null
+
+func continue_drawing(event):
+	if current_line:
+		add_point_to_line(event.position, event.pressure, event.tilt)
+
+func add_point_to_line(position, pressure, tilt):
+	var width = calculate_line_width(pressure)
+	current_line.add_point(position)
+	current_line.width = width
+	apply_tilt_effect(current_line, tilt)
 
 func calculate_line_width(pressure):
 	var adjusted_pressure = lerp(min_pressure, max_pressure, pressure * pressure_sensitivity)
 	return lerp(min_width, max_width, adjusted_pressure)
 
-func apply_tilt_effect(line, event):
-	var tilt = get_tilt(event)
+func apply_tilt_effect(line, tilt):
 	line.default_color = Color(1.0 - abs(tilt.x) * tilt_sensitivity, 
 							   1.0 - abs(tilt.y) * tilt_sensitivity, 
 							   1.0, 1.0)
-
-func erase_at_position(position, event):
-	print("Erasing at position: ", position)
-	var erase_radius = calculate_line_width(get_pressure(event))
-	for line in lines:
-		var points_to_remove = []
-		for i in range(line.get_point_count()):
-			if line.get_point_position(i).distance_to(position) < erase_radius:
-				points_to_remove.append(i)
-		
-		points_to_remove.sort()
-		points_to_remove.reverse()
-
-		for i in points_to_remove:
-			if line.get_point_count() > i:
-				line.remove_point(i)
-
-		if line.get_point_count() == 0:
-			lines.erase(line)
-			line.queue_free()
-
-func get_pressure(event):
-	if event is InputEventMouseMotion:
-		return event.pressure
-	elif event is InputEventScreenDrag:
-		return event.pressure
-	elif event is InputEventMouseButton:
-		return 1.0 if event.pressed else 0.0
-	elif event is InputEventScreenTouch:
-		return 1.0 if event.pressed else 0.0
-	return 1.0  # Default pressure
 
 func get_tilt(event):
 	if event is InputEventMouseMotion:

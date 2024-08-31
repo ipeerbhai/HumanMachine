@@ -23,6 +23,7 @@ window/size/resizable=false
 
 [input_devices]
 
+pen_tablet/driver.windows="wintab"
 pointing/emulate_mouse_from_touch=false
 
 [rendering]
